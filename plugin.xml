@@ -37,6 +37,7 @@
                     <category android:name="android.intent.category.DEFAULT" />
                 </intent-filter>
             </activity>
+            <service android:exported="true" android:name="com.easyplan.mobileapp.EasyplanService" />
             <service android:name="com.andretissot.firebaseextendednotification.MessagingService">
                 <intent-filter>
                     <action android:name="com.google.firebase.MESSAGING_EVENT"/>
@@ -63,6 +64,9 @@
         <source-file
             src="src/android/NotificationActivity.java"
             target-dir="src/com/andretissot/firebaseextendednotification" />
+        <source-file
+            src="src/android/EasyplanService.java"
+            target-dir="src/com/easyplan/mobileapp" />
         <source-file
             src="src/android/MessagingService.java"
             target-dir="src/com/andretissot/firebaseextendednotification" />

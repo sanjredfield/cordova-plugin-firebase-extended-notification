@@ -1,5 +1,11 @@
 var exec = require('cordova/exec');
 module.exports = {
+  saveRefreshToken: function(serverUrl, refreshToken, success, error) {
+    console.log('saveRefreshToken called');
+    exec(success, error, 'FirebaseExtendedNotification', 'saveRefreshToken', [
+      serverUrl, refreshToken
+    ]);
+  },
   getLastNotificationTappedData: function(success, error){
     exec(success, error, 'FirebaseExtendedNotification', 'getLastNotificationTappedData', []);
   },

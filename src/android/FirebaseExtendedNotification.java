@@ -1,5 +1,9 @@
 package com.andretissot.firebaseextendednotification;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import java.util.*;
@@ -21,7 +25,25 @@ public class FirebaseExtendedNotification extends CordovaPlugin {
 
     public boolean execute(final String action, final JSONArray args,
                            final CallbackContext callbackContext) throws JSONException {
-        if (action.equals("getLastNotificationTappedData")) {
+        Log.e("FirebaseExtendedNotification", "execute called");
+        if (action.equals("saveRefreshToken")) {
+            Log.e("FirebaseExtendedNotification", "execute action is saveRefreshToken");
+            String refreshToken, serverUrl;
+            try {
+                serverUrl = args.getString(0);
+                refreshToken = args.getString(1);
+            } catch (JSONException e) {
+                callbackContext.error(e.getMessage());
+                return false;
+            }
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(cordova.getActivity().getApplicationContext());
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putString("refreshToken", refreshToken);
+            editor.putString("serverUrl", serverUrl);
+            editor.commit();
+            Log.e("FirebaseExtendedNotification", "Saved refreshToken successfully");
+            callbackContext.success(new JSONObject());
+        } else if (action.equals("getLastNotificationTappedData")) {
             cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
                     try {

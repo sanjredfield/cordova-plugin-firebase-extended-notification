@@ -3,19 +3,25 @@ package com.andretissot.firebaseextendednotification;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Notification.BigPictureStyle;
 import android.app.Notification.BigTextStyle;
 import android.app.Notification.InboxStyle;
 import android.app.Notification.Builder;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.service.notification.StatusBarNotification;
 import com.gae.scaffolder.plugin.*;
+import android.util.Log;
+import java.lang.CharSequence;
+import java.lang.Class;
 import java.util.*;
 import org.json.*;
+
+import com.easyplan.mobileapp.R;
+import com.easyplan.mobileapp.EasyplanService;
 
 /**
  * Created by André Augusto Tissot on 15/10/16.
@@ -75,7 +81,13 @@ public class Manager {
         if (options.doesColor() && Build.VERSION.SDK_INT >= 22)
             builder.setColor(options.getColor());
         this.setContentTextAndMultiline(builder, options);
-        this.setOnClick(builder, dataToReturnOnClick);
+        this.addActions(builder, dataToReturnOnClick, options);
+
+        if (!options.doesDisableClick()) this.setOnClick(builder, dataToReturnOnClick, options.getId());
+        else this.disableClick(builder, options.getId());
+
+        if (options.isOngoing()) builder.setOngoing(true);
+
         Notification notification;
         if (Build.VERSION.SDK_INT < 16) {
             notification = builder.getNotification(); // Notification for HoneyComb to ICS
@@ -88,6 +100,7 @@ public class Manager {
             notification.defaults |= Notification.DEFAULT_VIBRATE;
         if(options.doesSound() && options.getSoundUri() == null)
             notification.defaults |= Notification.DEFAULT_SOUND;
+        if(options.isOngoing()) notification.defaults |= Notification.FLAG_ONGOING_EVENT;
         NotificationManager notificationManager
             = (NotificationManager) this.context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(options.getId(), notification);
@@ -129,8 +142,75 @@ public class Manager {
         builder.setContentText(summary).setTicker(ticker);
     }
 
-    private void setOnClick(Builder builder, JSONObject dataToReturnOnClick) {
-        Intent intent = new Intent(this.context, NotificationActivity.class).setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+    private void addActions(Builder builder, JSONObject dataToReturnOnClick, Options options) {
+        JSONArray actions = options.getActions();
+        int notificationId = options.getId();
+        if (actions == null) return;
+        for (int i = 0; i < actions.length(); i++) {
+            JSONObject action = null;
+            try {
+                action = actions.getJSONObject(i);
+                this.addAction(builder, dataToReturnOnClick, action, notificationId);
+            } catch (JSONException e) {
+                continue;
+            }
+        }
+    }
+
+    private void addAction(
+        Builder builder,
+        JSONObject dataToReturnOnClick,
+        JSONObject action,
+        int notificationId
+    ) {
+        JSONObject actionDetails = null;
+        int icon = 0;
+        String label = null;
+        Class<?> activity = null;
+
+        try {
+            icon = action.getInt("icon");
+            label = action.getString("label");
+        } catch (JSONException e) {
+            return;
+        }
+
+        try {
+            actionDetails = action.getJSONObject("actionDetails");
+        } catch (JSONException e) {
+            actionDetails = new JSONObject();
+        }
+
+        try {
+            activity = Class.forName(action.getString("activity"));
+        } catch (Exception e) {
+            activity = null;
+        }
+
+        Intent intent = this.makeIntent(dataToReturnOnClick, activity, notificationId);
+        intent.putExtra("actionDetails", actionDetails.toString());
+        int reqCode = new Random().nextInt();
+        PendingIntent actionIntent = null;
+        if (activity != null) {
+            actionIntent = PendingIntent.getService(
+                this.context, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        } else {
+            actionIntent = PendingIntent.getActivity(
+                this.context, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
+
+        Notification.Action replyAction = new Notification.Action.Builder(
+            icon, label, actionIntent).build();
+        builder.addAction(replyAction);
+    }
+
+    private Intent makeIntent(
+        JSONObject dataToReturnOnClick,
+        Class<?> activity,
+        int notificationId
+    ) {
+        if (activity == null) activity = NotificationActivity.class;
+        Intent intent = new Intent(this.context, activity).setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         Iterator<?> keys = dataToReturnOnClick.keys();
         while (keys.hasNext()) {
             String key = (String) keys.next();
@@ -142,6 +222,22 @@ public class Manager {
             }
             intent.putExtra(key, value == null ? null : value.toString());
         }
+        intent.putExtra("notificationId", notificationId);
+        return intent;
+    }
+
+    private void disableClick(Builder builder, int notificationId) {
+        Log.e("NotificationManager", "disableClick called");
+        Intent intent = this.makeIntent(new JSONObject(), EasyplanService.class, notificationId);
+        int reqCode = new Random().nextInt();
+        PendingIntent contentIntent = PendingIntent.getService(
+            this.context, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(contentIntent);
+    }
+
+    private void setOnClick(Builder builder, JSONObject dataToReturnOnClick, int notificationId) {
+        Log.e("NotificationManager", "setOnClick called");
+        Intent intent = this.makeIntent(dataToReturnOnClick, null, notificationId);
         int reqCode = new Random().nextInt();
         PendingIntent contentIntent = PendingIntent.getActivity(
             this.context, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
