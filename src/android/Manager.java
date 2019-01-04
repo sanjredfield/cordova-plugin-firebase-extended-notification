@@ -20,7 +20,7 @@ import java.lang.Class;
 import java.util.*;
 import org.json.*;
 
-import com.easyplan.mobileapp.R;
+// import com.easyplan.mobileapp.R;
 import com.easyplan.mobileapp.EasyplanService;
 
 /**
@@ -87,6 +87,10 @@ public class Manager {
         else this.disableClick(builder, options.getId());
 
         if (options.isOngoing()) builder.setOngoing(true);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setChannelId(options.getChannelId());
+        }
 
         Notification notification;
         if (Build.VERSION.SDK_INT < 16) {
