@@ -50,6 +50,11 @@
                 <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
                     android:resource="@xml/firebaseextendednotification_provider_paths"/>
             </provider>
+            <receiver android:exported="true" android:name="com.easyplan.mobileapp.InstallReferrerReceiver">
+                <intent-filter>
+                    <action android:name="com.android.vending.INSTALL_REFERRER" />
+                </intent-filter>
+            </receiver>
         </config-file>
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="FirebaseExtendedNotification" >
@@ -66,6 +71,9 @@
             target-dir="src/com/andretissot/firebaseextendednotification" />
         <source-file
             src="src/android/EasyplanService.java"
+            target-dir="src/com/easyplan/mobileapp" />
+        <source-file
+            src="src/android/InstallReferrerReceiver.java"
             target-dir="src/com/easyplan/mobileapp" />
         <source-file
             src="src/android/MessagingService.java"

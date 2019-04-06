@@ -405,6 +405,7 @@ public class Options {
     }
 
     protected int getResourceIdForDrawable(String resourcePath) {
+        Log.e("getResourceIdForDrawable", "resource path: " + resourcePath);
         int resId = getResourceIdForDrawable(this.context.getPackageName(), resourcePath);
         if (resId == 0)
             resId = getResourceIdForDrawable("android", resourcePath);
