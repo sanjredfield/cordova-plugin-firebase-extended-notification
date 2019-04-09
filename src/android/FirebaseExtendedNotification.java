@@ -1,9 +1,16 @@
 package com.andretissot.firebaseextendednotification;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import java.util.*;
 import org.json.*;
+
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 
 /**
@@ -19,9 +26,43 @@ public class FirebaseExtendedNotification extends CordovaPlugin {
         return lastNotificationTappedData;
     }
 
+    private FirebaseAnalytics mFirebaseAnalytics = null;
+
+    public static Bundle fromJson(JSONObject s) {
+        Bundle bundle = new Bundle();
+
+        for (Iterator<String> it = s.keys(); it.hasNext(); ) {
+            String key = it.next();
+            String str = s.optString(key);
+            if (str != null) {
+                bundle.putString(key, str);
+            }
+        }
+
+        return bundle;
+    }
+
     public boolean execute(final String action, final JSONArray args,
                            final CallbackContext callbackContext) throws JSONException {
-        if (action.equals("getLastNotificationTappedData")) {
+        Log.e("FirebaseExtendedNotification", "execute called");
+        if (action.equals("saveRefreshToken")) {
+            Log.e("FirebaseExtendedNotification", "execute action is saveRefreshToken");
+            String refreshToken, serverUrl;
+            try {
+                serverUrl = args.getString(0);
+                refreshToken = args.getString(1);
+            } catch (JSONException e) {
+                callbackContext.error(e.getMessage());
+                return false;
+            }
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(cordova.getActivity().getApplicationContext());
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putString("refreshToken", refreshToken);
+            editor.putString("serverUrl", serverUrl);
+            editor.commit();
+            Log.e("FirebaseExtendedNotification", "Saved refreshToken successfully");
+            callbackContext.success(new JSONObject());
+        } else if (action.equals("getLastNotificationTappedData")) {
             cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
                     try {
@@ -82,7 +123,39 @@ public class FirebaseExtendedNotification extends CordovaPlugin {
                     }
                 }
             });
-        } else return false;
+        } else if (action.equals("logEvent")) {
+            Log.e("FirebaseExtendedNotification", "logEvent called");
+            try {
+                if (mFirebaseAnalytics == null) {
+                    mFirebaseAnalytics = FirebaseAnalytics.getInstance(
+                        cordova.getActivity().getApplicationContext());
+                }
+                String eventName = args.getString(0);
+                JSONObject params = args.getJSONObject(1);
+                Bundle bundle = fromJson(params);
+                mFirebaseAnalytics.logEvent(eventName, bundle);
+                callbackContext.success(new JSONObject());
+            } catch (Exception e) {
+                Log.e("FirebaseExtendedNotification", "exception in logEvent " + e.getMessage());
+                callbackContext.error(e.getMessage());
+                return false;
+            }
+        } else if (action.equals("getReferrer")) {
+            Log.e("FirebaseExtendedNotification", "getReferrer called");
+            try {
+                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(cordova.getActivity().getApplicationContext());
+                if (sharedPref.contains("referrer")) {
+                    callbackContext.success(sharedPref.getString("referrer", ""));
+                }
+                callbackContext.error("Key not found");
+            } catch (Exception e) {
+                Log.e("FirebaseExtendedNotification", "exception in getReferrer " + e.getMessage());
+                callbackContext.error(e.getMessage());
+                return false;
+            }
+        } else {
+            return false;
+        }
         return true;
     }
 }

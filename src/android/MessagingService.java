@@ -12,6 +12,7 @@ import android.util.Log;
 
 public class MessagingService extends MyFirebaseMessagingService {
     public void onMessageReceived(RemoteMessage remoteMessage) {
+        Log.e("MessagingService", "remoteMessage received");
         super.onMessageReceived(remoteMessage);
         if(remoteMessage.getNotification() != null
             || remoteMessage.getData() == null

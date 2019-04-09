@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.StrictMode;
 import android.support.v4.content.FileProvider;
+import android.util.Log;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -48,6 +49,8 @@ public class Options {
         this.vibratePattern = getLongArray(options, "vibrate", null, true);
         this.doesVibrate = this.vibratePattern!=null || getBoolean(options, "vibrate", true);
         this.soundUri = getUriOption(options, "sound");
+        this.doesDisableClick = getBoolean(options, "disableClick", false);
+        this.isOngoing = getBoolean(options, "ongoing", false);
         this.doesSound = this.soundUri!=null || getBoolean(options, "sound", true);
         this.setSmallIconResourceId(options);
         this.setLargeIconBitmap(options);
@@ -55,6 +58,8 @@ public class Options {
         this.channelId = getString(options, "channelId", "notification");
         this.channelName = getString(options, "channelName", "Notification");
         this.channelDescription = getString(options, "channelDescription", "");
+
+        this.actions = getActions(options, "actions");
     }
 
     protected int id;
@@ -72,6 +77,8 @@ public class Options {
     protected long[] vibratePattern;
     protected Uri soundUri;
     protected boolean doesSound;
+    protected boolean doesDisableClick;
+    protected boolean isOngoing;
     protected int color;
     protected boolean doesColor;
     protected Bitmap largeIconBitmap;
@@ -80,6 +87,7 @@ public class Options {
     protected String channelName;
     protected String channelId;
     protected String channelDescription;
+    protected JSONArray actions;
 
     public int getId() {
         return id;
@@ -133,6 +141,14 @@ public class Options {
         return vibratePattern;
     }
 
+    public boolean doesDisableClick() {
+        return doesDisableClick;
+    }
+
+    public boolean isOngoing() {
+        return isOngoing;
+    }
+
     public boolean doesSound() {
         return doesSound;
     }
@@ -169,6 +185,10 @@ public class Options {
         return channelDescription;
     }
 
+    public JSONArray getActions() {
+        return actions;
+    }
+
     protected void setSmallIconResourceId(JSONObject options){
         String icon = null;
         if(!options.isNull("smallIcon")){
@@ -191,11 +211,20 @@ public class Options {
     protected void setLargeIconBitmap(JSONObject options){
         this.largeIconBitmap = this.getBitmapOption(options, "largeIcon");
         if(this.largeIconBitmap == null){
-            int iconId = getResourceIdForDrawable(context.getPackageName(), "icon");
+            int iconId = 0;
+            try {
+                String largeIconPath = options.getString("largeIconPath");
+                iconId = getResourceIdForDrawable(largeIconPath);
+            } catch (JSONException e) {
+            }
+            if (iconId == 0)
+                iconId = getResourceIdForDrawable(context.getPackageName(), "icon");
             if (iconId == 0)
                 iconId = getResourceIdForDrawable("android", "icon");
             if (iconId == 0)
                 iconId = android.R.drawable.screen_background_dark_transparent;
+
+            Log.e("NotificationOptions", " " + iconId);
             //uses app default
             this.largeIconBitmap=BitmapFactory.decodeResource(this.context.getResources(), iconId);
         }
@@ -340,7 +369,43 @@ public class Options {
         return longArray;
     }
 
+    protected JSONArray getActions(JSONObject options, String attributeName) {
+        if(options.isNull(attributeName)) return null;
+
+        JSONArray array;
+        try {
+            array = options.getJSONArray(attributeName);
+        } catch (JSONException e){
+            e.printStackTrace();
+            return null;
+        }
+
+        for (int i = 0; i < array.length(); i++) {
+            JSONObject currAction = null;
+            try {
+                currAction = array.getJSONObject(i);
+            } catch (JSONException e) {
+                continue;
+            }
+
+            String icon = null;
+            try {
+                icon = currAction.getString("icon");
+            } catch (JSONException e) {
+                icon = "mipmap/icon";
+            }
+
+            try {
+                currAction.put("icon", getResourceIdForDrawable(icon));
+            } catch (JSONException e) {
+                continue;
+            }
+        }
+        return array;
+    }
+
     protected int getResourceIdForDrawable(String resourcePath) {
+        Log.e("getResourceIdForDrawable", "resource path: " + resourcePath);
         int resId = getResourceIdForDrawable(this.context.getPackageName(), resourcePath);
         if (resId == 0)
             resId = getResourceIdForDrawable("android", resourcePath);

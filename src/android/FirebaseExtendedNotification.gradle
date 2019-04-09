@@ -12,8 +12,8 @@ repositories {
     jcenter()
 }
 dependencies {
-    implementation 'com.google.firebase:firebase-core:10.+'
-    implementation 'com.google.firebase:firebase-crash:10.+'
+    implementation 'com.google.firebase:firebase-core:10.2.6'
+    implementation 'com.google.firebase:firebase-crash:10.2.6'
 }
 
 // apply plugin: 'com.google.gms.google-services'
