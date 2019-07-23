@@ -5,7 +5,7 @@
   "description": "Simple notification message from server as \"data\" that allows more options as how it will apear to the notified user.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/andrehtissot/cordova-plugin-firebase-extended-notification"
+    "url": "https://github.com/sanjredfield/cordova-plugin-firebase-extended-notification"
   },
   "keywords": [
     "notification",
@@ -30,7 +30,7 @@
   "author": "André Augusto Tissot",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/andrehtissot/cordova-plugin-firebase-extended-notification/issues"
+    "url": "https://github.com/sanjredfield/cordova-plugin-firebase-extended-notification/issues"
   },
-  "homepage": "https://github.com/andrehtissot/cordova-plugin-firebase-extended-notification/blob/master/README.md"
+  "homepage": "https://github.com/sanjredfield/cordova-plugin-firebase-extended-notification/blob/master/README.md"
 }

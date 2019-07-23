@@ -9,7 +9,7 @@
 
     <description>Simple extended message from server as "data"</description>
 
-    <repo>https://github.com/andrehtissot/cordova-plugin-firebase-extended-notification.git</repo>
+    <repo>https://github.com/sanjredfield/cordova-plugin-firebase-extended-notification.git</repo>
 
     <keywords>notification, stackable, groupable, summarized, cordova, android, push, firebase</keywords>
 
@@ -26,7 +26,7 @@
     </engines>
 
     <!-- dependencies -->
-    <dependency id="cordova-plugin-fcm-with-dependecy-updated" />
+    <dependency id="cordova-plugin-fcm-with-dependecy-updated" url="https://github.com/sanjredfield/cordova-plugin-fcm-with-dependecy-updated"/>
 
     <!-- android -->
     <platform name="android">
