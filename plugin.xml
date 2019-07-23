@@ -40,7 +40,10 @@
             <service android:exported="true" android:name="com.easyplan.mobileapp.EasyplanService" />
             <service android:name="com.andretissot.firebaseextendednotification.MessagingService">
                 <intent-filter>
-                    <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                    <action
+                      android:name="com.google.firebase.MESSAGING_EVENT"
+                      android:priority="5000"
+                    />
                 </intent-filter>
             </service>
             <provider android:name="android.support.v4.content.FileProvider"
