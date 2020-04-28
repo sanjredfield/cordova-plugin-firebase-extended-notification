@@ -172,7 +172,13 @@ public class FirebaseExtendedNotification extends CordovaPlugin {
                                 SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(
                                     cordova.getActivity().getApplicationContext());
                                 if (sharedPref.contains("referrer")) {
-                                    callbackContext.success(sharedPref.getString("referrer", ""));
+                                    try {
+                                        JSONObject callbackResponse = new JSONObject();
+                                        callbackResponse.put("referrerUrl", sharedPref.getString("referrer", ""));
+                                        callbackContext.success(callbackResponse);
+                                    } catch (JSONException e) {
+                                        callbackContext.error("JSON_EXCEPTION");
+                                    }
                                 } else {
                                     callbackContext.error("FEATURE_NOT_SUPPORTED");
                                 }
