@@ -12,6 +12,7 @@ repositories {
     jcenter()
 }
 dependencies {
+    implementation 'com.android.installreferrer:installreferrer:1.1'
     implementation 'com.google.firebase:firebase-core:11.0.1'
     implementation 'com.google.firebase:firebase-crash:11.0.1'
 }

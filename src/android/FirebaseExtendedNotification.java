@@ -3,6 +3,7 @@ package com.andretissot.firebaseextendednotification;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import org.apache.cordova.CallbackContext;
@@ -10,6 +11,7 @@ import org.apache.cordova.CordovaPlugin;
 import java.util.*;
 import org.json.*;
 
+import com.android.installreferrer.api.*;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 
@@ -143,14 +145,52 @@ public class FirebaseExtendedNotification extends CordovaPlugin {
         } else if (action.equals("getReferrer")) {
             Log.e("FirebaseExtendedNotification", "getReferrer called");
             try {
-                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(cordova.getActivity().getApplicationContext());
-                if (sharedPref.contains("referrer")) {
-                    callbackContext.success(sharedPref.getString("referrer", ""));
-                }
-                callbackContext.error("Key not found");
+                InstallReferrerClient referrerClient;
+                referrerClient = InstallReferrerClient.newBuilder(cordova.getActivity().getApplicationContext()).build();
+                referrerClient.startConnection(new InstallReferrerStateListener() {
+                    @Override
+                    public void onInstallReferrerSetupFinished(int responseCode) {
+                        switch (responseCode) {
+                            case InstallReferrerClient.InstallReferrerResponse.OK:
+                                JSONObject callbackResponse = new JSONObject();
+                                try {
+                                    ReferrerDetails response = referrerClient.getInstallReferrer();
+                                    callbackResponse.put("referrerUrl", response.getInstallReferrer());
+                                    callbackResponse.put("referrerClickTime", response.getReferrerClickTimestampSeconds());
+                                    callbackResponse.put("appInstallTime", response.getInstallBeginTimestampSeconds());
+                                    callbackResponse.put("instantExperienceLaunched", response.getGooglePlayInstantParam());
+                                    callbackContext.success(callbackResponse);
+                                } catch (RemoteException e) {
+                                    callbackContext.error("REMOTE_EXCEPTION");
+                                } catch (JSONException e) {
+                                    callbackContext.error("JSON_EXCEPTION");
+                                }
+                                referrerClient.endConnection();
+                                break;
+                            case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
+                                // API not available on the current Play Store app.
+                                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(
+                                    cordova.getActivity().getApplicationContext());
+                                if (sharedPref.contains("referrer")) {
+                                    callbackContext.success(sharedPref.getString("referrer", ""));
+                                } else {
+                                    callbackContext.error("FEATURE_NOT_SUPPORTED");
+                                }
+                                break;
+                            case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
+                                callbackContext.error("SERVICE_UNAVAILABLE");
+                                break;
+                        }
+                    }
+
+                    @Override
+                    public void onInstallReferrerServiceDisconnected() {
+                        callbackContext.error("SERVICE_DISCONNECTED");
+                    }
+                });
             } catch (Exception e) {
                 Log.e("FirebaseExtendedNotification", "exception in getReferrer " + e.getMessage());
-                callbackContext.error(e.getMessage());
+                callbackContext.error("GENERAL_EXCEPTION");
                 return false;
             }
         } else {
