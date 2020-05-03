@@ -150,9 +150,9 @@ public class FirebaseExtendedNotification extends CordovaPlugin {
                 referrerClient.startConnection(new InstallReferrerStateListener() {
                     @Override
                     public void onInstallReferrerSetupFinished(int responseCode) {
+                        JSONObject callbackResponse = new JSONObject();
                         switch (responseCode) {
                             case InstallReferrerClient.InstallReferrerResponse.OK:
-                                JSONObject callbackResponse = new JSONObject();
                                 try {
                                     ReferrerDetails response = referrerClient.getInstallReferrer();
                                     callbackResponse.put("referrerUrl", response.getInstallReferrer());
@@ -173,7 +173,6 @@ public class FirebaseExtendedNotification extends CordovaPlugin {
                                     cordova.getActivity().getApplicationContext());
                                 if (sharedPref.contains("referrer")) {
                                     try {
-                                        JSONObject callbackResponse = new JSONObject();
                                         callbackResponse.put("referrerUrl", sharedPref.getString("referrer", ""));
                                         callbackContext.success(callbackResponse);
                                     } catch (JSONException e) {
