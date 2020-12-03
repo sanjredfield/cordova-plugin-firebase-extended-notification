@@ -13,6 +13,10 @@ import org.json.*;
 
 import com.android.installreferrer.api.*;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.android.play.core.tasks.Task;
+import com.google.android.play.core.review.ReviewInfo;
+import com.google.android.play.core.review.ReviewManager;
+import com.google.android.play.core.review.ReviewManagerFactory;
 
 
 /**
@@ -198,6 +202,21 @@ public class FirebaseExtendedNotification extends CordovaPlugin {
                 callbackContext.error("GENERAL_EXCEPTION");
                 return false;
             }
+        } else if (action.equals("triggerReview")) {
+            ReviewManager manager = ReviewManagerFactory.create(
+                cordova.getActivity().getApplicationContext());
+            Task<ReviewInfo> request = manager.requestReviewFlow();
+            request.addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    ReviewInfo reviewInfo = task.getResult();
+                    Task<Void> flow = manager.launchReviewFlow(cordova.getActivity(), reviewInfo);
+                    flow.addOnCompleteListener(second_task -> {
+                        callbackContext.success("REVIEW_SUCCESS");
+                    });
+                } else {
+                    callbackContext.error("REVIEW_FAILED");
+                }
+            });
         } else {
             return false;
         }

@@ -26,4 +26,7 @@ module.exports = {
   getReferrer: function(success, error) {
     exec(success, error, 'FirebaseExtendedNotification', 'getReferrer', []);
   },
+  triggerReview: function(success, error) {
+    exec(success, error, 'FirebaseExtendedNotification', 'triggerReview', []);
+  },
 };
